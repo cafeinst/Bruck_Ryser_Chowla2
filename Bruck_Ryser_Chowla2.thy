@@ -759,6 +759,85 @@ proof -
   thus ?thesis by simp
 qed
 
+lemma brc_v_eq_1:
+  assumes v_eq_1: "𝗏 = 1"
+  assumes four_sq: "a^2 + b^2 + c^2 + d^2 = 𝗄 - Λ"
+  shows "∃x y z :: int. (x ≠ 0 ∨ y ≠ 0 ∨ z ≠ 0) ∧
+         of_int(x^2) = of_nat(𝗄 - Λ) * of_int(y^2) + of_nat Λ * of_int(z^2)"
+proof -
+  (* For v=1, construct a simple x vector *)
+  define x :: "rat mat" where "x = mat 1 1 (λ(i,j). 1)"
+  
+  have x_val: "x $$ (0, 0) = 1"
+    using x_def by simp
+  
+  (* Apply brc_x_equation *)
+  have brc_v1: "(∑i ∈ {0..<1}. (∑h ∈ {0..<1}. of_int(N $$ (h,i)) * x $$ (h,0))^2) =
+                of_int Λ * (∑j ∈ {0..<1}. x $$ (j,0))^2 + 
+                of_int(𝗄 - Λ) * (∑j ∈ {0..<1}. (x $$ (j,0))^2)"
+    using brc_x_equation[of x] v_eq_1 by simp
+  
+  (* Simplify the LHS: sum over {0..<1} has only one term at index 0 *)
+  have lhs_simpl: "(∑i ∈ {0..<1}. (∑h ∈ {0..<1}. of_int(N $$ (h,i)) * x $$ (h,0))^2) = 
+                   (of_int(N $$ (0,0)) * x $$ (0,0))^2"
+    by simp
+  then have lhs_val: "(∑i ∈ {0..<1}. (∑h ∈ {0..<1}. of_int(N $$ (h,i)) * x $$ (h,0))^2) = 
+                      (of_int(N $$ (0,0)))^2"
+    using x_val by simp
+  
+  (* Simplify the RHS *)
+  have sum_x: "(∑j ∈ {0..<1}. x $$ (j,0)) = x $$ (0,0)"
+    by simp
+  then have sum_x_val: "(∑j ∈ {0..<1}. x $$ (j,0)) = 1"
+    using x_val by simp
+  
+  have sum_x2: "(∑j ∈ {0..<1}. (x $$ (j,0))^2) = (x $$ (0,0))^2"
+    by simp
+  then have sum_x2_val: "(∑j ∈ {0..<1}. (x $$ (j,0))^2) = 1"
+    using x_val by simp
+  
+  (* Combine *)
+  have n00_eq: "(of_int(N $$ (0,0)) :: rat)^2 = of_int Λ + of_int(𝗄 - Λ)"
+    using brc_v1 lhs_val sum_x_val sum_x2_val by auto
+  
+  have kl_sum: "of_nat Λ + of_nat(𝗄 - Λ) = (of_nat 𝗄 :: rat)"
+  using blocksize_gt_index by (simp add: of_nat_diff)
+
+  then have "(of_int(N $$ (0,0)))^2 = (of_int 𝗄 :: rat)"
+  using n00_eq by simp
+  
+  have "of_int((N $$ (0,0))^2) = of_nat(𝗄 - Λ) * of_int(1^2) + of_nat Λ * of_int(1^2)"
+  proof -
+    have "(of_int(N $$ (0,0)) :: rat)^2 = (of_nat(𝗄 - Λ) :: rat) + (of_nat Λ :: rat)"
+      using n00_eq kl_sum by simp
+    then have "of_int((N $$ (0,0))^2) = (of_nat(𝗄 - Λ) :: rat) + (of_nat Λ :: rat)"
+      by (simp add: power2_eq_square)
+    also have "... = of_nat(𝗄 - Λ) * 1 + of_nat Λ * 1"
+      by simp
+    finally show ?thesis
+      by (metis (mono_tags, lifting) mult.right_neutral of_int_eq_iff of_int_hom.hom_one 
+        of_int_of_nat_eq of_nat_add one_power2)
+  qed
+
+  moreover have "(N $$ (0,0) ≠ 0 ∨ (1::int) ≠ 0 ∨ (1::int) ≠ 0)"
+    by simp
+
+  ultimately show ?thesis by blast
+qed
+
+(*
+  This file *explicitly* uses your four induction_step lemmas to perform the
+  Stinson elimination. The structure is:
+    - collapse_four_coordinates: bundles induction_step_0..3 at a fixed m
+      to replace the first 4 coordinates by a single square (via your
+      lagrange_identity_y), producing the next tail.  This mirrors exactly
+      your textual proof flow.
+    - iterate_elimination: runs m = 4..v, repeatedly applying the collapse
+      lemma to end with only y0 and yv.  No generic “eliminate_block_step”
+      anymore — we call your induction lemmas directly.
+    - bruck_ryser_chowla_odd: clears denominators and splits on v mod 4.
+*)
+
 lemma brc_v_1_mod_4:
   fixes a b c d m :: nat
   assumes four_sq: "a^2 + b^2 + c^2 + d^2 = 𝗄 - Λ"
@@ -1179,3 +1258,4 @@ qed
 
 end
 end
+
