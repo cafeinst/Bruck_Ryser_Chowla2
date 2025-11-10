@@ -825,19 +825,6 @@ proof -
   ultimately show ?thesis by blast
 qed
 
-(*
-  This file *explicitly* uses your four induction_step lemmas to perform the
-  Stinson elimination. The structure is:
-    - collapse_four_coordinates: bundles induction_step_0..3 at a fixed m
-      to replace the first 4 coordinates by a single square (via your
-      lagrange_identity_y), producing the next tail.  This mirrors exactly
-      your textual proof flow.
-    - iterate_elimination: runs m = 4..v, repeatedly applying the collapse
-      lemma to end with only y0 and yv.  No generic “eliminate_block_step”
-      anymore — we call your induction lemmas directly.
-    - bruck_ryser_chowla_odd: clears denominators and splits on v mod 4.
-*)
-
 lemma brc_v_1_mod_4:
   fixes a b c d m :: nat
   assumes four_sq: "a^2 + b^2 + c^2 + d^2 = 𝗄 - Λ"
@@ -890,10 +877,10 @@ proof -
   have x_at_m1: "x $$ (m - 1, 0) = x3"
     using x_def m_props `m - 1 < m` `0 < 1` `m - 1 ≠ m - 4` `m - 1 ≠ m - 3` `m - 1 ≠ m - 2` by simp
 
-  have i0_in: "0 ∈ {0..<4}" sorry
-  have i1_in: "1 ∈ {0..<4}" sorry
-  have i2_in: "2 ∈ {0..<4}" sorry
-  have i3_in: "3 ∈ {0..<4}" sorry
+  have i0_in: "(0::nat) ∈ {0..<4}" by simp
+  have i1_in: "(1::nat) ∈ {0..<4}" by simp
+  have i2_in: "(2::nat) ∈ {0..<4}" by simp
+  have i3_in: "(3::nat) ∈ {0..<4}" by simp
 
   have "∃e0 e1 e2 e3. (∑h ∈ {0..<m}. of_int(N $$ (m-h-1,m-0-1)) * x $$ (m-h-1,0)) = 
                       e0 * y0' + e1 * y1' + e2 * y2' + e3 * y3' +
@@ -1007,8 +994,8 @@ proof -
         (∑j ∈ {4..<m}. ((∑h ∈ {0..<m}. of_int(N $$ (m-h-1,m-j-1)) * x $$ (m-h-1,0)) +
                  (∑h ∈ {m..<𝗏}. of_int(N $$ (h,m-j-1)) * x $$ (h,0)))^2)"
   proof -
-    have "finite {0..<4}" sorry
-    have "finite {4..<m}" by simp
+    have "finite ({0..<4} :: nat set)" by simp
+    have "finite ({4..<m} :: nat set)" by simp
     have "{0..<4} ∩ {4..<m} = {}" using inter1 by simp
     have "{0..<m} = {0..<4} ∪ {4..<m}" using split1 by simp
     show ?thesis
@@ -1039,8 +1026,8 @@ proof -
                  (∑j ∈ {0..<4}. (x $$ (j, 0))^2) +
                  (∑j ∈ {4..<𝗏}. (x $$ (j, 0))^2)"
   proof -
-    have "finite {0..<4}" sorry
-    have "finite {4..<𝗏}" by simp
+    have "finite ({0..<4} :: nat set)" by simp
+    have "finite ({4..<𝗏} :: nat set)" by simp
     show ?thesis
       using sum.union_disjoint[OF `finite {0..<4}` `finite {4..<𝗏}` inter2,
           of "λj. (x $$ (j, 0))^2"]
@@ -1255,7 +1242,6 @@ proof -
 
   ultimately show ?thesis by blast
 qed
-
 end
 end
 
